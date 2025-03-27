@@ -20,12 +20,30 @@ const app = express();
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
 app.use(bodyParser.json({ limit: '10mb' }));
-app.use(cors());
 app.use(fileUpload());
 
 app.use(express.static('public'));
 
 app.use(ip().getIpInfoMiddleware);
+
+// SEGURIDAD CORS
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:8080' // Frontend desarrollo
+    ];
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true, // Si se necesitan cookies/tokens de autenticación
+};
+app.use(cors(corsOptions));
 
 (async function (app) {
   // Cargando servicios
