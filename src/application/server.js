@@ -14,7 +14,7 @@ const App = require('./');
 const ip = require('./lib/ip');
 const { errors } = require('../common');
 const api = require('./api');
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 const app = express();
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;

@@ -19,7 +19,7 @@ let items = [
     nombres            : 'Admin',
     primer_apellido    : 'Admin',
     segundo_apellido   : 'Admin',
-    correo_electronico : 'admin@yopmail.com',
+    correo_electronico : 'admin@gmail.com',
     celular            : '',
     estado             : 'ACTIVO'
   }
