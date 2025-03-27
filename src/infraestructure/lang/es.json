@@ -1,0 +1,61 @@
+{
+  "fields": {
+    "capitalAutorizado": "Capital autorizado",
+    "valorNominalAccion": "Valor nominal de la acción",
+    "valorCuota": "Valor cuota",
+    "totalNumeroAcciones": "Total del número de acciones",
+    "totalCapitalSuscrito": "Total del capital suscrito",
+    "totalCapitalPagado": "Total del capital pagado",
+    "totalParticipacionPorcentual": "Total de participación porcentual",
+    "totalNumeroCuotas": "Total de número de cuotas",
+    "totalAporteCapital": "Total de aporte de capital",
+
+    "piso": "Piso del edificio"
+  },
+  "errors": {
+    "crud": {
+      "rowNotFound": "No existe el registro"
+    },
+    "validation": {
+      "message": "Revise que todos los campos sean correctos",
+      "required": "El campo es requerido",
+      "validationIsEmailFailed": "El campo no es un correo electrónico válido",
+      "validationIsEmailOnEmailFailed": "El campo no es un correo electrónico válido",
+      "nit": "El campo no es un NIT válido",
+      "date": "El campo no es una fecha válida",
+      "date_less_than": "El campo debe contener una fecha menor a la fecha actual",
+      "date_greater_than": "El campo debe contener una fecha mayor a la fecha actual",
+      "data_date_less_than": "El campo debe contener una fecha no menor a {0} días.",
+      "data_date_greater_than": "El campo debe contener una fecha no mayor a {0} días",
+      "data_minlength": "El campo debe contener un mínimo de {0} carácteres",
+      "data_min": "El campo debe contener un valor mayor igual a {0}",
+      "data_max": "El campo debe contener un valor menor igual a {0}",
+      "data_exactlength": "El campo debe tener exactamente {0} carácteres",
+      "data_matches": "El campo no concuerda con el campo {0}",
+      "alpha": "El campo sólo puede contener carácteres alfabéticos",
+      "alpha_numeric": "El campo sólo puede contener carácteres alfanuméricos",
+      "alpha_dash": "El campo sólo puede contener carácteres alfanuméricos, guiones bajos \"_\" o guiones \"-\"",
+      "validationIsNumericFailed": "El campo sólo puede contener números",
+      "integer": "El campo debe contener un número entero",
+      "matches": "El campo no concuerda con el campo {0}",
+      "is_natural": "El campo debe contener sólo números positivos.",
+      "no_zero": "El campo debe contener un número mayor a cero",
+      "decimal": "El campo debe contener un número decimal",
+      "unique": "Este valor ya fue registrado anteriormente",
+      "numeric": "Debe ser un valor numérico"
+    },
+    "errors": {
+      "noMessageSupplied": "no message supplied",
+      "error": "\nERROR:",
+      "warning": "\nAdvertencia:",
+      "anErrorOccurred": "An error occurred",
+      "unknownErrorOccurred": "Ocurrió un error desconocido.",
+      "unknownError": "Error desconocido",
+      "unknownApiError": "API Error desconocido en el API",
+      "checkDatabase": "Check your database file and make sure that file owner and permissions are correct.",
+      "notEnoughPermission": "You do not have permission to perform this action",
+      "encounteredError": "Encountered the error: ",
+      "pageNotFound": "Page not found"
+    }
+  }
+}
