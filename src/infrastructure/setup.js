@@ -3,7 +3,7 @@
 const minimist = require('minimist');
 const inquirer = require('inquirer');
 const { errors, config } = require('../common');
-const db = require('./');
+const db = require('.');
 
 const args = minimist(process.argv);
 const prompt = inquirer.createPromptModule();
