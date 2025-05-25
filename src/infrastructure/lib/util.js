@@ -5,6 +5,7 @@ const path = require('path');
 const Sequelize = require('sequelize');
 const lang = require('../lang');
 const { array } = require('../../common');
+const uuid = require('uuid');
 const moment = require('moment');
 
 /**
@@ -175,6 +176,21 @@ function setTimestampsSeeder (arr, idUser = '7171272e-b31b-4c34-9220-9f535c958c5
   return arr;
 }
 
+function addKey (arr) {
+  return arr.map((el) => {
+    el.id = uuid.v4();
+    return el;
+  });
+}
+
+function addKeyFromText (arr) {
+  return arr.map((el) => {
+    el.id = textToUuid(el.codigo);
+    // el.id = uuid.v4();
+    return el;
+  });
+}
+
 function getQuery (options = {}, arr = []) {
   const query = {};
   if (options.limit) {
@@ -265,7 +281,7 @@ function toJSON (result) {
   let count = 0;
   if (result) {
     if (result.rows && Array.isArray(result.rows)) {
-      result.rows.map(item => {
+      result.rows.forEach(item => {
         rows.push(item.toJSON());
       });
     }
@@ -275,6 +291,18 @@ function toJSON (result) {
     count,
     rows
   };
+}
+
+function toJSONArray (result) {
+  if (result) {
+    if (result && Array.isArray(result)) {
+      return result.map(item => item.toJSON());
+    }
+  }
+}
+
+function textToUuid (text, namespace = '2a1bb04d-5436-5497-99ea-ed1cc6dbd0ac') {
+  return uuid.v5(text, namespace);
 }
 
 module.exports = {
@@ -288,5 +316,9 @@ module.exports = {
   errorHandler,
   getText,
   convertLinealObject,
-  toJSON
+  toJSON,
+  toJSONArray,
+  textToUuid,
+  addKey,
+  addKeyFromText
 };

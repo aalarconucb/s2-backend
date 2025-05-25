@@ -40,11 +40,6 @@ module.exports = (sequelize, DataTypes) => {
       type      : DataTypes.JSONB,
       allowNull : true
     },
-    idEntidad: {
-      type   : DataTypes.UUID,
-      xlabel : lang.t('fields.idEntidad'),
-      field  : 'id_entidad'
-    },
     idRol: {
       type   : DataTypes.UUID,
       xlabel : lang.t('fields.idRol'),

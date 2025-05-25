@@ -16,10 +16,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull : false,
       xlabel    : lang.t('fields.codigo')
     },
-    otros: {
-      type      : DataTypes.STRING(100),
+    orden: {
+      type      : DataTypes.INTEGER,
       allowNull : true,
-      xlabel    : lang.t('fields.otros')
+      field     : 'orden'
     },
     nombre: {
       type      : DataTypes.STRING(100),
