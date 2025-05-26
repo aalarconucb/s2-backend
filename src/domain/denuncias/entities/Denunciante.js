@@ -1,6 +1,8 @@
 import { DocumentoIdentidad } from '../valueObjects/DocumentoIdentidad.js';
 import { Ubicacion } from '../valueObjects/Ubicacion.js';
 
+// Entidad del dominio: Denunciante
+// Representa una parte del agregado Denuncia, encapsulando datos específicos y posibles comportamientos futuros
 export class Denunciante {
   constructor({ nombre, documento, domicilio, telefono, tipo }) {
     if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 3) {
@@ -18,7 +20,9 @@ export class Denunciante {
     if (!['VICTIMA', 'TERCERO'].includes(tipo)) {
       throw new Error("Tipo de denunciante inválido. Debe ser 'VICTIMA' o 'TERCERO'.");
     }
-
+    
+    // Identificador único de la entidad
+    this.id = id;
     this.nombre = nombre.trim();
     this.documento = documento;
     this.domicilio = domicilio;

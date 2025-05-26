@@ -1,6 +1,8 @@
 import { DocumentoIdentidad } from '../valueObjects/DocumentoIdentidad.js';
 import { Ubicacion } from '../valueObjects/Ubicacion.js';
 
+// Entidad del dominio: Victima
+// Representa una parte del agregado Denuncia, encapsulando datos específicos y posibles comportamientos futuros
 export class Victima {
   constructor({ documento, domicilio, ocupacion, institucionLaboral, direccionLaboral, telefonoLaboral, embarazo }) {
     if (!(documento instanceof DocumentoIdentidad)) {
@@ -11,6 +13,8 @@ export class Victima {
       throw new Error("Ubicación del domicilio inválida.");
     }
 
+    // Identificador único de la entidad
+    this.id = id;
     this.documento = documento;
     this.domicilio = domicilio;
     this.ocupacion = ocupacion || null;

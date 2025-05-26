@@ -2,9 +2,9 @@ const { ErrorApp } = require('../../lib/error');
 
 module.exports = function usuarioCasoService (repositories) {
   const { UsuarioCasoRepository } = repositories;
-  const InstrumentoService = require('../../services/app/InstrumentoService')(repositories)
-  const DenunciaService = require('../../services/app/DenunciaService')(repositories)
-  const SolicitudAtencionService = require('../../services/app/SolicitudAtencionService')(repositories)
+  const InstrumentoService = require('../../services/denuncias/InstrumentoService')(repositories)
+  const DenunciaService = require('../../services/denuncias/DenunciaService')(repositories)
+  const SolicitudAtencionService = require('../../services/denuncias/SolicitudAtencionService')(repositories)
 
   async function listarAsignados (idUsuario) {
     try {

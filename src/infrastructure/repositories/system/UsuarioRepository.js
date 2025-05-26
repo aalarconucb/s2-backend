@@ -1,12 +1,22 @@
 'use strict';
 
-const { query } = require('express');
-const { getQuery, errorHandler, toJSON } = require('../../lib/util');
+const {
+  getQuery,
+  errorHandler,
+  toJSON,
+  toJSONArray
+} = require('../../lib/util');
 const Repository = require('../Repository');
 
-module.exports = function usuariosRepository (models, Sequelize) {
+module.exports = function usuariosRepository (models, Sequelize, sequelize) {
   const Op = Sequelize.Op;
-  const { usuario, rol, entidad, menu } = models;
+  const {
+    usuario,
+    rol,
+    municipio,
+    distrito,
+    dpa
+  } = models;
 
   async function findAll (params = {}) {
     const query = getQuery(params);
@@ -18,13 +28,25 @@ module.exports = function usuariosRepository (models, Sequelize) {
       'id',
       'nombres',
       'cargo',
-      'idEntidad',
       'numeroDocumento',
+      'fechaNacimiento',
       'primerApellido',
       'segundoApellido',
       'telefono',
       'usuario',
-      'createdAt'
+      'tipoContrato',
+      'fechaInicioContrato',
+      'fechaFinContrato',
+      'createdAt',
+      'userCreated',
+      [
+        sequelize.literal(`
+          ( SELECT CONCAT(nombres, ' ', primer_apellido, ' ', segundo_apellido)
+            FROM sys_usuario c
+            WHERE c.id = usuario._user_created
+          )
+        `), 'usuarioCreador'
+      ]
     ];
     query.where = {};
 
@@ -41,22 +63,21 @@ module.exports = function usuariosRepository (models, Sequelize) {
     if (params.search) {
       query.where = {
         ...query.where,
-        [Op.or]: [
-          {
-            nombres: {
-              [Op.iLike]: `%${params.search}%`
-            }
-          },
-          {
-            primerApellido: {
-              [Op.iLike]: `%${params.search}%`
-            }
-          },
-          {
-            segundoApellido: {
-              [Op.iLike]: `%${params.search}%`
-            }
+        [Op.or]: [{
+          nombres: {
+            [Op.iLike]: `%${params.search}%`
           }
+        },
+        {
+          primerApellido: {
+            [Op.iLike]: `%${params.search}%`
+          }
+        },
+        {
+          segundoApellido: {
+            [Op.iLike]: `%${params.search}%`
+          }
+        }
         ]
       };
     }
@@ -103,16 +124,25 @@ module.exports = function usuariosRepository (models, Sequelize) {
       };
     }
 
+    if (params.codDepartamento) {
+      query.where.codDepartamento = params.codDepartamento;
+    }
+
+    if (params.idMunicipio) {
+      query.where.idMunicipio = params.idMunicipio;
+    }
+
+    if (params.idDistrito) {
+      query.where.idDistrito = params.idDistrito;
+    }
+
     query.include = [
       {
-        attributes : ['id', 'nombre', 'sigla', 'nivel', 'idEntidad'],
-        model      : entidad,
-        as         : 'entidad'
-      },
-      {
-        through : { attributes: [] },
-        model   : rol,
-        as      : 'roles'
+        through: {
+          attributes: []
+        },
+        model : rol,
+        as    : 'roles'
       }
     ];
 
@@ -129,35 +159,80 @@ module.exports = function usuariosRepository (models, Sequelize) {
       'primerApellido',
       'segundoApellido',
       'numeroDocumento',
+      'fechaNacimiento',
       'telefono',
-      'idEntidad',
       'cargo',
       'celular',
       'correoElectronico',
       'foto',
-      'estado'
+      'estado',
+      'loginPorCiudadania',
+      'idDistrito',
+      'tipoContrato',
+      'fechaInicioContrato',
+      'fechaFinContrato',
+      'codDepartamento',
+      'idMunicipio',
+      'idDistrito',
+      'fechaInicioContrato',
+      'fechaFinContrato',
+      'createdAt',
+      'updatedAt',
+      'userCreated',
+      'idPreregistro',
+      'tieneWhatsapp',
+      [
+        sequelize.literal(`
+          ( SELECT CONCAT(nombres, ' ', primer_apellido, ' ', segundo_apellido)
+            FROM sys_usuario c
+            WHERE c.id = usuario._user_created
+          )
+        `), 'usuarioCreacion'
+      ],
+      [
+        sequelize.literal(`
+          ( SELECT CONCAT(nombres, ' ', primer_apellido, ' ', segundo_apellido)
+            FROM sys_usuario c
+            WHERE c.id = usuario._user_updated
+          )
+        `), 'usuarioModificacion'
+      ]
     ];
 
     query.where = params;
 
     query.include = [
       {
-        attributes : ['id', 'nombre', 'sigla', 'nivel', 'idEntidad'],
-        model      : entidad,
-        as         : 'entidad'
-      },
-      {
-        required   : true,
-        through    : { attributes: [] },
-        attributes : [
+        required : true,
+        through  : {
+          attributes: []
+        },
+        attributes: [
           'id',
-          'idEntidad',
           'nombre',
           'descripcion',
           'estado'
         ],
         model : rol,
         as    : 'roles'
+      },
+      {
+        model: distrito,
+        as    : 'distritoUsuario',
+        attributes: [
+          'id',
+          'nombre',
+          'idMunicipio',
+        ],
+        include: {
+          model: municipio,
+          as    : 'municipioDistrito',
+          attributes: [
+            'id',
+            'nombre',
+            'codigoMunicipio',
+          ]
+        }
       }
     ];
 
@@ -175,16 +250,12 @@ module.exports = function usuariosRepository (models, Sequelize) {
 
     query.include = [
       {
-        attributes : ['id', 'nombre', 'sigla', 'nivel', 'idEntidad'],
-        model      : entidad,
-        as         : 'entidad'
-      },
-      {
-        required   : true,
-        through    : { attributes: [] },
-        attributes : [
+        required : true,
+        through  : {
+          attributes: []
+        },
+        attributes: [
           'id',
-          'idEntidad',
           'nombre',
           'descripcion',
           'estado'
@@ -201,7 +272,22 @@ module.exports = function usuariosRepository (models, Sequelize) {
     return null;
   }
 
+  async function buscarPorNumeroDocumento (numeroDocumento) {
+    const query = {};
+
+    query.where = {
+      numeroDocumento
+    };
+
+    const result = await usuario.findOne(query);
+    if (result) {
+      return result.toJSON();
+    }
+    return null;
+  }
+
   async function login (params = {}) {
+    console.log('login', params);
     const query = {};
     query.attributes = [
       'id',
@@ -215,23 +301,22 @@ module.exports = function usuariosRepository (models, Sequelize) {
       'celular',
       'correoElectronico',
       'foto',
-      'estado'
+      'estado',
+      'idMunicipio',
+      'idDistrito',
+      'codDepartamento'
     ];
 
-    query.where = params;
+    query.where = params
 
     query.include = [
       {
-        attributes : ['id', 'nombre', 'sigla', 'nivel', 'idEntidad'],
-        model      : entidad,
-        as         : 'entidad'
-      },
-      {
-        required   : true,
-        through    : { attributes: [] },
-        attributes : [
+        required : true,
+        through  : {
+          attributes: []
+        },
+        attributes: [
           'id',
-          'idEntidad',
           'nombre',
           'descripcion',
           'estado'
@@ -292,7 +377,11 @@ module.exports = function usuariosRepository (models, Sequelize) {
 
     let result;
     try {
-      result = await usuario.create(usuarioParam, t ? { transaction: t } : {});
+      result = await usuario.create(usuarioParam, t
+        ? {
+            transaction: t
+          }
+        : {});
     } catch (e) {
       errorHandler(e);
     }
@@ -304,22 +393,25 @@ module.exports = function usuariosRepository (models, Sequelize) {
     query.where = {};
 
     if (params.correoElectronico) {
-      Object.assign(query.where, { correoElectronico: params.correoElectronico });
+      Object.assign(query.where, {
+        correoElectronico: params.correoElectronico
+      });
     }
 
     if (params.usuario) {
-      Object.assign(query.where, { usuario: params.usuario });
+      Object.assign(query.where, {
+        usuario: params.usuario
+      });
     }
 
     if (params.usuario && params.correoElectronico) {
       query.where = {
-        [Op.or]: [
-          {
-            usuario: params.usuario
-          },
-          {
-            correoElectronico: params.correoElectronico
-          }
+        [Op.or]: [{
+          usuario: params.usuario
+        },
+        {
+          correoElectronico: params.correoElectronico
+        }
         ]
       };
     }
@@ -337,6 +429,124 @@ module.exports = function usuariosRepository (models, Sequelize) {
     return null;
   }
 
+  async function obtenerProfesionalesPorDistrito (idDistrito) {
+    const query = {};
+    query.attributes = ['id', 'nombres', 'primerApellido', 'segundoApellido', 'numeroDocumento'];
+    query.where = {
+      idDistrito
+    };
+
+    query.include = [{
+      required : true,
+      through  : {
+        attributes: []
+      },
+      model      : rol,
+      as         : 'roles',
+      attributes : ['id', 'nombre']
+    }];
+
+    const result = await usuario.findAll(query);
+    if (result) {
+      return toJSONArray(result);
+    }
+    return null;
+  }
+
+  async function buscarUsuarioPorRolDistrito (distrito, profesional) {
+    const query = {};
+
+    query.where = {
+      idDistrito: distrito
+    };
+
+    query.include = [
+      {
+        required : true,
+        through  : {
+          attributes: []
+        },
+        attributes: [
+          'id',
+          'nombre',
+          'descripcion',
+          'estado'
+        ],
+        model : rol,
+        as    : 'roles',
+        where : {
+          nombre: profesional
+        }
+      }
+    ];
+
+    const result = await usuario.findOne(query);
+    if (result) {
+      return result.toJSON();
+    }
+    return null;
+  }
+
+  async function obtenerUsuariosMunicipios (params = {}) {
+    const select = `
+      select su.id, su.nombres, su.primer_apellido, su.segundo_apellido, su.correo_electronico, su.telefono , su.celular, sr.nombre as rol,
+      case when m.nombre IS null then m2.nombre else m.nombre end AS municipio,
+      case when m.nombre IS null then m2.direccion else m.direccion end AS direccion_municipio,
+      case when m.nombre IS null then m2.telefono  else m.telefono end AS telefono_municipio,
+      case when sd.departamento IS null then sd2.departamento else sd.departamento end AS departamento,
+      d.nombre as nombre_slim, d.direccion as direccion_slim, d.telefono as telefono_slim`;
+
+    const selectCount = 'select count(1) as total';
+    let query = `
+      from sys_usuario su
+      inner join sys_rol_usuario sru on su.id = sru.id_usuario
+      inner join sys_rol sr on sru.id_rol = sr.id
+      left join municipio m on su."id_municipio" = m.id
+      left join sys_dpa sd on m."codigo_municipio" = sd.codigo
+      left join distrito d on su."id_distrito" = d.id
+      left join municipio m2 ON d."id_municipio" = m2.id
+      left join sys_dpa sd2 on m2."codigo_municipio" = sd2.codigo
+      where sr.tipo  in ('municipal', 'distrital')`;
+
+    if (params.nombresApellidos) {
+      query = `${query} and (su.nombres ilike :nombresApellidos or su.primer_apellido ilike :nombresApellidos or su.segundo_apellido ilike :nombresApellidos)`;
+    }
+
+    if (params.codigoDepartamento) {
+      query = `${query} and (sd.codigo_departamento = :codigoDepartamento or sd2.codigo_departamento = :codigoDepartamento)`;
+    }
+
+    if (params.idRed) {
+      query = `${query} and (m.red = :idRed or m2.red = :idRed)`;
+    }
+
+    if (params.idMunicipio) {
+      query = `${query} and (su."id_municipio" = :idMunicipio or d."id_municipio" = :idMunicipio)`;
+    }
+
+    const queryTotal = `${selectCount} ${query}`;
+    const options = {
+      type         : sequelize.QueryTypes.SELECT,
+      replacements : {
+        idMunicipio        : params.idMunicipio,
+        codigoDepartamento : params.codigoDepartamento,
+        idRed              : params.idRed,
+        nombresApellidos   : `%${params.nombresApellidos}%`
+      }
+    };
+    const [count] = await sequelize.query(queryTotal, options);
+
+    query = `${select} ${query} order by su.nombres asc offset :offset limit :limit`;
+    options.replacements.limit = params.limit;
+    options.replacements.offset = params.limit * (params.page - 1);
+    const usuarios = await sequelize.query(query, options);
+
+    return {
+      count : count.total,
+      rows  : usuarios
+    };
+  }
+
   return {
     findByCi,
     login,
@@ -345,6 +555,10 @@ module.exports = function usuariosRepository (models, Sequelize) {
     findAll,
     findOne,
     createOrUpdate,
-    deleteItem: (id, t) => Repository.deleteItem(id, usuario, t)
+    deleteItem: (id, t) => Repository.deleteItem(id, usuario, t),
+    buscarPorNumeroDocumento,
+    obtenerProfesionalesPorDistrito,
+    buscarUsuarioPorRolDistrito,
+    obtenerUsuariosMunicipios
   };
 };

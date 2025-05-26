@@ -8,7 +8,7 @@ module.exports = function setupAuthController (services) {
   const { AuthService } = services;
 
   async function login (req, res, next) {
-    debug('Metodo para autenticarse');
+    debug('Metodo ´para loguearse');
     try {
       const { usuario, contrasena } = req.body;
       const respuesta = await AuthService.login(usuario, contrasena, req);

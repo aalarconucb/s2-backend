@@ -8,20 +8,14 @@ const url = require('url');
 const { config } = require('../../../common');
 const { iss } = require('../../lib/util');
 const { generateToken } = require('../../../application/lib/auth');
+const moment = require('moment');
 
 module.exports = function authService (repositories, helpers, res) {
-  const { FechaHelper } = helpers;
-
-  const { 
-    AuthRepository,
-    UsuarioRepository,
-    SuscripcionRepository,
-    ParametroRepository,
-    MenuRepository,
-    PermisoRepository
+  const {
+    AuthRepository, UsuarioRepository, SuscripcionRepository,
+    ParametroRepository, MenuRepository, PermisoRepository, DistritoRepository, MunicipioRepository
   } = repositories;
-
-
+  const UsuarioService = require('./UsuarioService')(repositories, helpers, res);
   const issuer = new Issuer(iss);
 
   const cliente = new issuer.Client(config.openid.client);
@@ -50,7 +44,6 @@ module.exports = function authService (repositories, helpers, res) {
       };
       data.token = 'dsa';
       data.estado = 'INICIO';
-
       await AuthRepository.createOrUpdate(data);
 
       return res.success({
@@ -68,54 +61,87 @@ module.exports = function authService (repositories, helpers, res) {
     let respuesta;
     try {
       const params = cliente.callbackParams(req);
-      if (!params.state) throw new Error('Parámetro state es requerido.');
-      if (!params.code) throw new Error('Parámetro code es requerido.');
-
-      const parametros = {state  : params.state, estado : 'INICIO'};
-
+      if (!params.state) {
+        throw new Error('Parámetro state es requerido.');
+      }
+      if (!params.code) {
+        throw new Error('Parámetro code es requerido.');
+      }
+      const parametros = {
+        state  : params.state,
+        estado : 'INICIO'
+      };
       const resultadoState = await AuthRepository.findOne(parametros);
+      if (resultadoState) {
+        // obtenemos el code
+        const respuestaCode = await cliente.callback(cliente.redirect_uris[0], params, {
+          nonce : resultadoState.parametros.nonce,
+          state : resultadoState.state
+        });
 
-      if (!resultadoState) throw new Error('Los códigos de verificacion no coinciden. Intente nuevamente.');
+        resultadoState.tokens = respuestaCode;
 
-      const respuestaCode = await cliente.callback(cliente.redirect_uris[0], params, {
-        nonce : resultadoState.parametros.nonce,
-        state : resultadoState.state
-      });
+        const claims = await cliente.userinfo(respuestaCode.access_token);
 
-      resultadoState.tokens = respuestaCode;
+        claims.fecha_nacimiento = moment(claims.fecha_nacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD');
+        if (/[a-z]/i.test(claims.profile.documento_identidad.numero_documento)) {
+          claims.profile.documento_identidad.complemento = claims.profile.documento_identidad.numero_documento.slice(-2);
+          claims.profile.documento_identidad.numero_documento = claims.profile.documento_identidad.numero_documento.slice(0, -2);
+        }
+        const dataPersona = {
+          // tipoDocumento   : claims.profile.documento_identidad.tipo_documento,
+          numeroDocumento : claims.profile.documento_identidad.numero_documento,
+          fechaNacimiento : claims.fecha_nacimiento
+        };
 
-      const claims = await cliente.userinfo(respuestaCode.access_token);
+        if (claims.profile.documento_identidad.complemento) dataPersona.complemento = claims.profile.documento_identidad.complemento;
 
-      const datosPersona = transformarDatosCiudadania(claims);
+        const data = await UsuarioRepository.findByCi(dataPersona);
+        if (data) {
+          user = await UsuarioRepository.findOne({ usuario: data.usuario });
+          if (user.estado === 'ACTIVO') {
+            respuesta = await getResponse(user);
+            resultadoState.idUsuario = user.id;
+            resultadoState.estado = 'ACTIVO';
+            // resultadoState.token = respuesta.token;
+            await AuthRepository.createOrUpdate(resultadoState);
 
-      const dataPersona = { numeroDocumento: datosPersona.numeroDocumento, fechaNacimiento: datosPersona.fechaNacimiento };
-      if (datosPersona.complemento) dataPersona.complemento = datosPersona.complemento;
+            user.nombres = claims.profile.nombre.nombres;
+            user.primerApellido = claims.profile.nombre.primer_apellido;
+            user.segundoApellido = claims.profile.nombre.segundo_apellido;
+            user.correoElectronico = claims.email;
+            user.celular = claims.celular;
 
-      const data = await UsuarioRepository.findByCi(dataPersona);
-      if (data) {
-        user = await UsuarioRepository.findOne({ usuario: data.usuario });
-        if (user.estado === 'ACTIVO') {
-          respuesta = await getResponse(user);
-          resultadoState.idUsuario = user.id;
-          resultadoState.estado = 'ACTIVO';
-          // resultadoState.token = respuesta.token;
-          await AuthRepository.createOrUpdate(resultadoState);
-        } else { // usuario inactivo
+            await UsuarioRepository.createOrUpdate(user);
+          } else { // usuario inactivo
+            respuesta = {
+              url     : getUrl(resultadoState),
+              mensaje : 'El usuario no esta ACTIVO en el sistema. Consulte con el administrador del sistema.'
+            };
+          }
+        } else { // no tiene acceso al sistema
           respuesta = {
             url     : getUrl(resultadoState),
-            mensaje : 'El usuario no esta ACTIVO en el sistema. Consulte con el administrador del sistema.'
+            mensaje : `La persona ${claims.profile.nombre.nombres} no tiene acceso al sistema. Consulte con el administrador del sistema.`
           };
         }
-      } else { // no tiene acceso al sistema
-        respuesta = {
-          url     : getUrl(resultadoState),
-          mensaje : `La persona ${claims.profile.nombre.nombres} no tiene acceso al sistema. Consulte con el administrador del sistema.`
-        };
+        return res.success(respuesta);
+      } else {
+        return res.warning(new Error('Los códigos de verificacion no coenciden. Intente nuevamente.'));
       }
-      return res.success(respuesta);
     } catch (e) {
       return res.error(e);
     }
+  }
+
+  async function registrarLogin (user, info, resultadoState) {
+    info.state = resultadoState.state;
+    const respuesta = await UsuarioService.getResponse(user, null, info);
+    resultadoState.id_usuario = user.id;
+    resultadoState.estado = config.constants.ESTADO_ACTIVO;
+    resultadoState._user_created = user.id;
+    await AuthRepository.createOrUpdate(resultadoState);
+    return respuesta;
   }
 
   async function refreshToken (idRol, idUsuario) {
@@ -197,10 +223,8 @@ module.exports = function authService (repositories, helpers, res) {
         idUsuario         : usuario.id,
         celular           : usuario.celular,
         correoElectronico : usuario.correoElectronico,
-        usuario           : usuario.usuario,
-        idEntidad         : usuario.entidad.id
+        usuario           : usuario.usuario
       });
-
       return usuario;
     } catch (error) {
       throw new ErrorApp(error.message, 400);
@@ -210,15 +234,38 @@ module.exports = function authService (repositories, helpers, res) {
   async function login (usuario, contrasena, request) {
     try {
       const existeUsuario = await UsuarioRepository.login({ usuario });
+
       if (!existeUsuario) {
         throw new Error('No existe el usuario.');
       }
+
+      if (existeUsuario.estado !== 'ACTIVO') {
+        throw new Error('La cuenta de usuario está inactiva. Contacte al administrador.', 403);
+      }
+
       const respuestaVerificacion = await AuthRepository.verificarContrasena(contrasena, existeUsuario.contrasena);
       if (!respuestaVerificacion) {
         throw new Error('Error en su usuario o su contraseña.');
       }
       delete existeUsuario.contrasena;
       const respuesta = await  getResponse(existeUsuario);
+      console.log(respuesta);
+      if (respuesta.idDistrito) {
+        // completar codDepartamento y municipio
+        const distrito = await DistritoRepository.buscarDpaDistrito(respuesta.idDistrito);
+
+        respuesta.idMunicipio = distrito.municipioDistrito.id;
+        respuesta.codigoMunicipio = distrito.municipioDistrito.codigoMunicipio;
+        respuesta.codigoDepartamento = distrito.municipioDistrito.codigoMunicipio.slice(0, 2);
+        respuesta.codDepartamento = distrito.municipioDistrito.codigoMunicipio.slice(0, 2);
+        respuesta.idRed = distrito.municipioDistrito.red;
+      } else if (respuesta.idMunicipio) {
+        // completar departamento
+        const municipio = await MunicipioRepository.obtenerDepartamento(respuesta.idMunicipio);
+        respuesta.codigoDepartamento = municipio.codigoMunicipio.slice(0, 2);
+        respuesta.codDepartamento = municipio.codigoMunicipio.slice(0, 2);
+      }
+
       await AuthRepository.deleteItemCond({ idUsuario: existeUsuario.id });
       await AuthRepository.createOrUpdate({
         ip          : request.ipInfo.ip,
@@ -227,7 +274,6 @@ module.exports = function authService (repositories, helpers, res) {
         token       : respuesta.token,
         idUsuario   : existeUsuario.id,
         idRol       : existeUsuario.roles.map(x => x.id).join(','),
-        idEntidad   : existeUsuario.entidad.id,
         userCreated : existeUsuario.id
       });
       return respuesta;
@@ -239,28 +285,6 @@ module.exports = function authService (repositories, helpers, res) {
   async function getSubscription (idUsuario) {
     const subscriptions = await SuscripcionRepository.findOne({ idUsuario });
     return subscriptions;
-  }
-
-  function transformarDatosCiudadania (claims) {
-    const fechaNacimiento = FechaHelper.formatearFecha(claims.fecha_nacimiento);
-    let numeroDocumento = claims.profile?.documento_identidad?.numero_documento;
-    let complemento = null;
-
-    if (claims.profile?.documento_identidad?.numero_documento.includes('-')) {
-      ([numeroDocumento, complemento] = claims.profile?.documento_identidad?.numero_documento.split('-'));
-    }
-
-    return {
-      numeroDocumento,
-      complemento,
-      tipoDocumento     : claims.profile?.documento_identidad?.tipo_documento,
-      fechaNacimiento,
-      nombres           : claims.profile?.nombre?.nombres,
-      primerApellido    : claims.profile?.nombre?.primer_apellido || '',
-      segundoApellido   : claims.profile?.nombre?.segundo_apellido || '',
-      correoElectronico : claims.email,
-      celular           : claims.celular
-    };
   }
 
   return {

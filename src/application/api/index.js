@@ -65,6 +65,11 @@ module.exports = async function setupApi (app, services) {
     });
   });
 
+  //rutas para el preregistro
+ // app.get('/auth/dpa', controllers.DpaController.obtenerDepartamentos)
+ // app.get('/auth/dpa/:codigoDepartamento/municipios', controllers.DpaController.obtenerMunicipiosPorDepartamento)
+ // app.post('/auth/preregistro', controllers.PreregistroController.crear);
+
   console.log(' -', { method: 'GET', url: '/public/status' });
   console.log(' -', { method: 'POST', url: '/auth/login' });
   console.log(' -', { method: 'POST', url: '/auth/refresh-token' });

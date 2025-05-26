@@ -1,5 +1,7 @@
 import { Ubicacion } from '../valueObjects/Ubicacion.js';
 
+// Entidad del dominio: Denunciado
+// Representa una parte del agregado Denuncia, encapsulando datos específicos y posibles comportamientos futuros
 export class Denunciado {
   constructor({ nombre, relacion, domicilio, ocupacion, institucionLaboral, direccionLaboral, telefonoLaboral }) {
     if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 3) {
@@ -14,6 +16,8 @@ export class Denunciado {
       throw new Error("Ubicación del domicilio inválida.");
     }
 
+    // Identificador único de la entidad
+    this.id = id;
     this.nombre = nombre;
     this.relacion = relacion;
     this.domicilio = domicilio;
