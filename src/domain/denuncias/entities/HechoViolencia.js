@@ -3,6 +3,14 @@
 
 export class HechoViolencia {
   constructor({ relacion, direccion, fecha, hora }) {
+    
+    // Identificador único de la entidad
+    this.id = id;
+    this.relacion = relacion.trim();
+    this.direccion = direccion.trim();
+    this.fecha = new Date(fecha);
+    this.hora = hora || null;
+
     if (!relacion || typeof relacion !== 'string' || relacion.trim().length < 10) {
       throw new Error("Relación del hecho debe describirse con más detalle.");
     }
@@ -18,12 +26,5 @@ export class HechoViolencia {
     if (hora && !/^\\d{2}:\\d{2}$/.test(hora)) {
       throw new Error("Hora del hecho inválida (formato esperado HH:MM).");
     }
-    
-    // Identificador único de la entidad
-    this.id = id;
-    this.relacion = relacion.trim();
-    this.direccion = direccion.trim();
-    this.fecha = new Date(fecha);
-    this.hora = hora || null;
   }
 }

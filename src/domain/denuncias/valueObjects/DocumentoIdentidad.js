@@ -5,7 +5,7 @@ export class DocumentoIdentidad {
       throw new Error("Tipo de documento inválido. Permitidos: CI, PAS, EXT, OTRO.");
     }
 
-    if (!numero || typeof numero !== 'string' || numero.length < 4) {
+    if (!numero || typeof numero !== 'string' || numero.length < 8) {
       throw new Error("Número de documento inválido.");
     }
 

@@ -7,6 +7,8 @@ export class GeneradorCodigoDenuncia {
   }
 
   generar({ codigoMunicipio }) {
+    // Ejemplo: CH-ALC-RUV-000001-2024
+    
     const dpa = this.dpaCatalogo.find(item => item.codigo === codigoMunicipio);
     if (!dpa || !dpa.sigla || !dpa.codigo_departamento) {
       throw new Error("Código de municipio inválido o no encontrado en catálogo DPA.");

@@ -21,6 +21,9 @@ export class Denuncia {
     this.estado = estado;
     this.fechaRegistro = fechaRegistro;
 
+    //Usuario Asignado
+    this.idUsuarioAsignado = idUsuario;
+
     this._validarEstado();
   }
 
@@ -90,7 +93,7 @@ export class Denuncia {
 
     this.estado = nuevoEstado;
   }
-  
+
   // Método interno para validar el estado inicial
   _validarEstado() {
     if (!this.estado) {

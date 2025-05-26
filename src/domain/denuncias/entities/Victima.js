@@ -5,14 +5,6 @@ import { Ubicacion } from '../valueObjects/Ubicacion.js';
 // Representa una parte del agregado Denuncia, encapsulando datos específicos y posibles comportamientos futuros
 export class Victima {
   constructor({ documento, domicilio, ocupacion, institucionLaboral, direccionLaboral, telefonoLaboral, embarazo }) {
-    if (!(documento instanceof DocumentoIdentidad)) {
-      throw new Error("Documento de identidad inválido.");
-    }
-
-    if (!(domicilio instanceof Ubicacion)) {
-      throw new Error("Ubicación del domicilio inválida.");
-    }
-
     // Identificador único de la entidad
     this.id = id;
     this.documento = documento;
@@ -23,6 +15,14 @@ export class Victima {
     this.telefonoLaboral = this.validarTelefono(telefonoLaboral);
     this.embarazo = embarazo ?? false;
     this.estado = 'ACTIVO';
+
+    if (!(documento instanceof DocumentoIdentidad)) {
+      throw new Error("Documento de identidad inválido.");
+    }
+
+    if (!(domicilio instanceof Ubicacion)) {
+      throw new Error("Ubicación del domicilio inválida.");
+    }
   }
 
   validarTelefono(telefono) {
