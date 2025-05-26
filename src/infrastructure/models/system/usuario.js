@@ -2,16 +2,12 @@
 
 const lang = require('../../lang');
 const util = require('../../lib/util');
+const { armarFecha, formatearFecha } = require('../../lib/date');
 
 module.exports = (sequelize, DataTypes) => {
   let fields = {
-    id        : util.pk,
-    idEntidad : {
-      type   : DataTypes.UUID,
-      xlabel : lang.t('fields.idEntidad'),
-      field  : 'id_entidad'
-    },
-    tipoDocumento: {
+    id            : util.pk,
+    tipoDocumento : {
       type   : DataTypes.STRING(15),
       xlabel : lang.t('fields.tipoDocumento'),
       field  : 'tipo_documento'
@@ -30,7 +26,16 @@ module.exports = (sequelize, DataTypes) => {
     fechaNacimiento: {
       type   : DataTypes.DATEONLY,
       xlabel : lang.t('fields.fechaNacimiento'),
-      field  : 'fecha_nacimiento'
+      field  : 'fecha_nacimiento',
+      get    : function () {
+        if (this.getDataValue('fechaNacimiento')) {
+          return armarFecha(this.getDataValue('fechaNacimiento'));
+        }
+        return null;
+      },
+      set: function (value) {
+        this.setDataValue('fechaNacimiento', formatearFecha(value));
+      }
     },
     usuario: {
       type   : DataTypes.STRING(100),
@@ -44,13 +49,13 @@ module.exports = (sequelize, DataTypes) => {
     },
     nombres: {
       type      : DataTypes.STRING(100),
-      allowNull : false,
+      allowNull : true,
       xlabel    : lang.t('fields.nombres'),
       field     : 'nombres'
     },
     primerApellido: {
       type      : DataTypes.STRING(100),
-      allowNull : false,
+      allowNull : true,
       xlabel    : lang.t('fields.primerApellido'),
       field     : 'primer_apellido'
     },
@@ -73,13 +78,13 @@ module.exports = (sequelize, DataTypes) => {
     },
     correoElectronico: {
       type      : DataTypes.STRING(100),
-      allowNull : false,
+      allowNull : true,
       xlabel    : lang.t('fields.correoElectronico'),
       field     : 'correo_electronico'
     },
     cargo: {
       type      : DataTypes.STRING(500),
-      allowNull : false,
+      allowNull : true,
       xlabel    : lang.t('fields.cargo'),
       field     : 'cargo'
     },
@@ -89,6 +94,12 @@ module.exports = (sequelize, DataTypes) => {
       xlabel    : lang.t('fields.foto'),
       field     : 'foto'
     },
+    loginPorCiudadania: {
+      type         : DataTypes.BOOLEAN,
+      allowNull    : false,
+      field        : 'login_por_ciudadania',
+      defaultValue : false
+    },
     estado: {
       type         : DataTypes.ENUM,
       values       : ['ACTIVO', 'INACTIVO'],
@@ -96,6 +107,51 @@ module.exports = (sequelize, DataTypes) => {
       allowNull    : false,
       xlabel       : lang.t('fields.estado'),
       field        : 'estado'
+    },
+    fechaInicioContrato: {
+      type         : DataTypes.DATEONLY,
+      allowNull    : true,
+      field     : 'fecha_inicio_contrato',
+      get       : function () {
+        if (this.getDataValue('fechaInicioContrato')) {
+          return armarFecha(this.getDataValue('fechaInicioContrato'));
+        }
+        return null;
+      },
+      set: function (value) {
+        if (value) {
+          this.setDataValue('fechaInicioContrato', formatearFecha(value));
+        }
+      }
+    },
+    fechaFinContrato: {
+      type         : DataTypes.DATEONLY,
+      allowNull    : true,
+      field     : 'fecha_fin_contrato',
+      get       : function () {
+        if (this.getDataValue('fechaFinContrato')) {
+          return armarFecha(this.getDataValue('fechaFinContrato'));
+        }
+        return null;
+      },
+      set: function (value) {
+        if (value) {
+          this.setDataValue('fechaFinContrato', formatearFecha(value));
+        }
+      }
+    },
+    tipoContrato: {
+      type      : DataTypes.ENUM,
+      values    : ['CONSULTOR', 'PERSONAL DE PLANTA (ITEM)', 'OTRO'],
+      defaultValue : 'CONSULTOR',
+      allowNull : false,
+      field     : 'tipo_contrato'
+    },
+    tieneWhatsapp: {
+      type      : DataTypes.BOOLEAN,
+      allowNull : true,
+      field     : 'tiene_whatsapp',
+      defaultValue : false
     }
   };
 

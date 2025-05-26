@@ -8,7 +8,6 @@ const bcrypt = require('bcrypt');
 let items = [
   {
     id                 : '7171272e-b31b-4c34-9220-9f535c958c5c',
-    id_entidad         : '745034da-06cb-4d98-8fee-4c982adfbb22',
     numero_documento   : '9248643',
     complemento        : '',
     tipo_documento     : 'CI',
@@ -17,12 +16,14 @@ let items = [
     usuario            : 'admin',
     contrasena         : bcrypt.hashSync('Developer', saltRounds),
     nombres            : 'Admin',
-    primer_apellido    : 'Admin',
-    segundo_apellido   : 'Admin',
-    correo_electronico : 'admin@gmail.com',
+    primer_apellido    : 'Desarrollo',
+    segundo_apellido   : 'RUV',
+    correo_electronico : 'admin@yopmail.com',
     celular            : '',
-    estado             : 'ACTIVO'
-  }
+    estado             : 'ACTIVO',
+    login_por_ciudadania : false,
+	  fecha_inicio_contrato : '2024-10-07'
+  },
 ];
 
 items = setTimestampsSeeder(items);

@@ -1,7 +1,7 @@
 'use strict';
 
 const {
-  setTimestampsSeeder
+  setTimestampsSeeder, textToUuid
 } = require('../lib/util');
 
 // Datos de producción
@@ -12,7 +12,13 @@ let items = [
   { id: 'ef6b99d0-0834-4d1e-86b0-207111744f98', nombre: 'Menus', ruta: 'menus', icono: 'menu', orden: 4, id_menu: null, estado: 'ACTIVO'  },
   { id: '6dc27435-bb49-48c8-b98d-ed9024d10ec5', nombre: 'Usuarios', ruta: 'usuarios', icono: 'people', orden: 5, id_menu: null, estado: 'ACTIVO'  },
   { id: 'a0882ff9-0d95-4d60-835d-85624f7a3469', nombre: 'Parametros', ruta: 'parametros', icono: 'settings', orden: 6, id_menu: null, estado: 'ACTIVO'  },
-  { id: 'a0882ff9-0d95-4d60-835d-85624f7a3411', nombre: 'Interoperabilidad', ruta: 'interoperabilidad', icono: 'cloud_sync', orden: 8, id_menu: null, estado: 'ACTIVO'  }
+  { id: 'a0882ff9-0d95-4d60-835d-85624f7a3411', nombre: 'Interoperabilidad', ruta: 'interoperabilidad', icono: 'cloud_sync', orden: 8, id_menu: null, estado: 'ACTIVO'  },
+
+  { id: textToUuid('Servicios'), nombre: 'Servicios', ruta: 'servicios', icono: 'domain', orden: 3, id_menu: null, estado: 'ACTIVO'  },
+  { id: textToUuid('Denuncia'), nombre: 'Denuncia', ruta: 'denuncias', icono: 'business', orden: 1, id_menu: textToUuid('Servicios'), estado: 'ACTIVO' },
+  { id: textToUuid('Orientacion'), nombre: 'Orientación', ruta: 'orientaciones', icono: 'business', orden: 2, id_menu: textToUuid('Servicios'), estado: 'ACTIVO' },
+  { id: textToUuid('DemandaAsistencia'), nombre: 'Asistencia Familiar', ruta: 'asistencias', icono: 'business', orden: 3, id_menu: textToUuid('Servicios'), estado: 'ACTIVO' },
+  { id: textToUuid('RequerimientoInforme'), nombre: 'Requerimiento de Informe', ruta: 'requerimiento', icono: 'business', orden: 4, id_menu: textToUuid('Servicios'), estado: 'ACTIVO' }
 
 ];
 

@@ -1,12 +1,12 @@
 'use strict';
 
 const {
-  setTimestampsSeeder
+  setTimestampsSeeder, textToUuid
 } = require('../lib/util');
 
 // Datos de producción
 let items = [
-  { id: '556f20d7-8db4-437c-9606-27ae81aff072', id_rol: '88b0104c-1bd1-42b2-bb01-9bf0502bab5a', id_usuario: '7171272e-b31b-4c34-9220-9f535c958c5c' }
+  { id: '556f20d7-8db4-437c-9606-27ae81aff072', id_rol: textToUuid('ADMINISTRADOR'), id_usuario: '7171272e-b31b-4c34-9220-9f535c958c5c' }
 ];
 items = setTimestampsSeeder(items);
 
